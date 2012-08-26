@@ -85,7 +85,7 @@ static int paz00_disp1_check_fb(struct device *dev, struct fb_info *info);
 static struct platform_pwm_backlight_data paz00_backlight_data = {
 	.pwm_id		= 0,
 	.max_brightness	= 255,
-	.dft_brightness	= 224,
+	.dft_brightness	= 40,
 	.pwm_period_ns	= 5000000,
 	.init		= paz00_backlight_init,
 	.exit		= paz00_backlight_exit,
@@ -218,7 +218,6 @@ static struct tegra_fb_data paz00_fb_data = {
 	.xres		= 1024,
 	.yres		= 600,
 	.bits_per_pixel	= 32,
-	.flags		= TEGRA_FB_FLIP_ON_PROBE,
 };
 
 static struct tegra_fb_data paz00_hdmi_fb_data = {
