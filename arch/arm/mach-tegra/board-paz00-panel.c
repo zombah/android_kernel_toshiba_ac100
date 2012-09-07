@@ -62,8 +62,6 @@ static int paz00_backlight_init(struct device *dev)
 	ret = gpio_direction_output(paz00_bl_enb, 1);
 	if (ret < 0)
 		gpio_free(paz00_bl_enb);
-	else
-		tegra_gpio_enable(paz00_bl_enb);
 
 	return ret;
 }
@@ -72,7 +70,6 @@ static void paz00_backlight_exit(struct device *dev)
 {
 	gpio_set_value(paz00_bl_enb, 0);
 	gpio_free(paz00_bl_enb);
-	tegra_gpio_disable(paz00_bl_enb);
 }
 
 static int paz00_backlight_notify(struct device *unused, int brightness)
@@ -377,19 +374,15 @@ int __init paz00_panel_init(void) {
 
 	gpio_request(paz00_en_vdd_pnl, "en_vdd_pnl");
 	gpio_direction_output(paz00_en_vdd_pnl, 1);
-	tegra_gpio_enable(paz00_en_vdd_pnl);
 
 	gpio_request(paz00_bl_vdd, "bl_vdd");
 	gpio_direction_output(paz00_bl_vdd, 1);
-	tegra_gpio_enable(paz00_bl_vdd);
 
 	gpio_request(paz00_lvds_shutdown, "lvds_shdn");
 	gpio_direction_output(paz00_lvds_shutdown, 1);
-	tegra_gpio_enable(paz00_lvds_shutdown);
 
 	gpio_request(paz00_hdmi_hpd, "hdmi_hpd");
 	gpio_direction_input(paz00_hdmi_hpd);
-	tegra_gpio_enable(paz00_hdmi_hpd);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
         paz00_panel_early_suspender.suspend = paz00_panel_early_suspend;
