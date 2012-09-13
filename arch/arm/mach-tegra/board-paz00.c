@@ -524,7 +524,7 @@ static void __init tegra_paz00_fixup(struct machine_desc *desc,
 {
 	mi->nr_banks = 1;
 	mi->bank[0].start = PHYS_OFFSET;
-	mi->bank[0].size = 448 * SZ_1M;
+	mi->bank[0].size = SZ_512M;
 }
 
 static __initdata struct tegra_clk_init_table paz00_clk_init_table[] = {
