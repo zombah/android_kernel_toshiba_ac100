@@ -18,9 +18,6 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
-#ifdef CONFIG_SWITCH
-#include <linux/switch.h>
-#endif /* CONFIG_SWITCH */
 
 #include <mach/tegra_alc5632_pdata.h>
 
@@ -45,9 +42,6 @@ struct tegra_alc5632 {
 	struct tegra_asoc_utils_data util_data;
 	struct tegra_alc5632_audio_platform_data *pdata;
 	int gpio_requested;
-#ifdef CONFIG_SWITCH
-	int jack_status;
-#endif /* CONFIG_SWITCH */
 };
 
 static int tegra_alc5632_asoc_hw_params(struct snd_pcm_substream *substream,
@@ -190,52 +184,6 @@ static struct snd_soc_jack_gpio tegra_alc5632_hp_jack_gpio = {
 	.debounce_time = 150,
 };
 
-#ifdef CONFIG_SWITCH
-/* These values are copied from Android WiredAccessoryObserver */
-enum headset_state {
-	BIT_NO_HEADSET = 0,
-	BIT_HEADSET_NO_MIC = (1 << 1),
-};
-
-static struct switch_dev tegra_alc5632_headset_switch = {
-	.name = "h2w",
-};
-
-static int tegra_alc5632_jack_notifier(struct notifier_block *self,
-		unsigned long action, void *dev)
-{
-	struct snd_soc_jack *jack = dev;
-	struct snd_soc_codec *codec = jack->codec;
-	struct snd_soc_card *card = codec->card;
-	struct tegra_alc5632* machine = snd_soc_card_get_drvdata(card);
-	enum headset_state state = BIT_NO_HEADSET;
-
-	dev_dbg(card->dev,"Jack notifier: Status: 0x%08x\n",
-			machine->jack_status);
-
-	machine->jack_status &= ~SND_JACK_HEADPHONE;
-	machine->jack_status |= (action & SND_JACK_HEADPHONE);
-
-	switch (machine->jack_status) {
-		case SND_JACK_HEADPHONE:
-			state = BIT_HEADSET_NO_MIC;
-			break;
-		case SND_JACK_MICROPHONE:
-			/* mic: would not report */
-		default:
-			state = BIT_NO_HEADSET;
-	}
-
-	switch_set_state(&tegra_alc5632_headset_switch, state);
-
-	return NOTIFY_OK;
-}
-
-static struct notifier_block tegra_alc5632_jack_detect_nb = {
-	.notifier_call = tegra_alc5632_jack_notifier,
-};
-#endif /* CONFIG_SWITCH */
-
 static const struct snd_soc_dapm_widget tegra_alc5632_dapm_widgets[] = {
 	SND_SOC_DAPM_SPK("Int Spk", NULL),
 	SND_SOC_DAPM_HP("Headset Stereophone", NULL),
@@ -267,13 +215,6 @@ static int tegra_alc5632_asoc_init(struct snd_soc_pcm_runtime *rtd)
 
 	snd_soc_jack_new(codec, "Headset Jack", SND_JACK_HEADSET,
 			 &tegra_alc5632_hs_jack);
-
-#ifdef CONFIG_SWITCH
-	/* Everytime the Jack status changes, notify our listerners */
-	snd_soc_jack_notifier_register(&tegra_alc5632_hs_jack,
-			&tegra_alc5632_jack_detect_nb);
-#endif /* CONFIG_SWITCH */
-
 	snd_soc_jack_add_pins(&tegra_alc5632_hs_jack,
 			ARRAY_SIZE(tegra_alc5632_hs_jack_pins),
 			tegra_alc5632_hs_jack_pins);
@@ -369,19 +310,7 @@ static __devinit int tegra_alc5632_probe(struct platform_device *pdev)
 		goto err_clear_drvdata;
 	}
 
-#ifdef CONFIG_SWITCH
-	/* Addd h2w swith class support */
-	ret = switch_dev_register(&tegra_alc5632_headset_switch);
-	if (ret < 0) {
-		dev_err(&pdev->dev, "Can't register SWITCH device\n");
-		goto err_unregister_card;
-	}
-#endif /* CONFIG_SWITCH */
-
 	return 0;
-
-err_unregister_card:
-	snd_soc_unregister_card(card);
 
 err_clear_drvdata:
 	snd_soc_card_set_drvdata(card, NULL);
@@ -406,9 +335,6 @@ static int __devexit tegra_alc5632_remove(struct platform_device *pdev)
 
 	snd_soc_unregister_card(card);
 
-#ifdef CONFIG_SWITCH
-	switch_dev_unregister(&tegra_alc5632_headset_switch);
-#endif /* CONFIG_SWITCH */
 	snd_soc_card_set_drvdata(card, NULL);
 	platform_set_drvdata(pdev, NULL);
 	card->dev = NULL;
