@@ -54,7 +54,9 @@
 #include "devices.h"
 #include "gpio-names.h"
 #include "pm.h"
+#ifdef CONFIG_MFD_NVEC
 #include "../../../drivers/staging/nvec/nvec.h"
+#endif
 #include "wakeups-t2.h"
 
 #define ATAG_NVIDIA	0x41000801
@@ -433,6 +435,7 @@ static struct platform_device leds_gpio = {
 	},
 };
 
+#ifdef CONFIG_MFD_NVEC
 static struct mfd_cell paz00_nvec_devices[] = {
 	{
 		.name = "nvec-kbd",
@@ -490,6 +493,7 @@ static struct platform_device nvec_device = {
 		.platform_data = &nvec_pdata,
 	}
 };
+#endif
 
 static struct gpio_keys_button paz00_gpio_keys_buttons[] = {
 	{
@@ -582,7 +586,9 @@ static struct tegra_i2c_platform_data paz00_dvc_platform_data = {
 };
 
 static struct platform_device *paz00_devices[] __initdata = {
+#ifdef CONFIG_MFD_NVEC
 	&nvec_device,
+#endif
 	&tegra_sdhci_device4,
 	&tegra_sdhci_device1,
 	&tegra_pmu_device,
